@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Écurie IA · cerveaux de course</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main data-view="menu">
+<header><h1>Écurie IA</h1><div class="hbtns"><button id="bHelp" class="ghost">Aide</button><button id="bMenu" class="ghost">Menu</button></div></header>
+
+<section id="vMenu">
+ <h2>Entraîne quatre cerveaux, puis fais-les courir.</h2>
+ <p class="lead">Chaque cerveau apprend à conduire sur le circuit de ton choix, génération après génération. Dès que l'un d'eux sait faire un tour complet, la course s'ouvre.</p>
+ <div class="steps">
+  <button id="bGoTrain" class="step"><b>1 · Entraînement</b><span>Choisis un cerveau, laisse-le apprendre, change de circuit quand il maîtrise le précédent.</span></button>
+  <button id="bGoRace" class="step" disabled><b>2 · Course</b><span id="raceHint"></span></button>
+ </div>
+</section>
+
+<section id="vGame">
+ <div class="stats">
+  <div class="stat"><b id="sTry">1</b><span id="lTry">Génération</span></div>
+  <div class="stat"><b id="sCur">0%</b><span id="lCur">Avancée</span></div>
+  <div class="stat"><b id="sBest">0%</b><span>Meilleur parcours</span></div>
+  <div class="stat"><b id="sRec">–</b><span>Meilleur tour</span></div>
+  <div class="stat"><b id="sState">En cours</b><span>État</span></div>
+ </div>
+ <div class="layout">
+  <div class="stage">
+   <div id="stage" aria-label="Circuit et voitures"></div>
+   <div class="playbar"><button id="bPause">⏸ Pause</button><div id="speedBox"></div></div>
+   <p class="note" id="note" aria-live="polite"></p>
+  </div>
+  <aside>
+   <div id="pTrain">
+    <h2>Tes cerveaux</h2>
+    <div id="brains" class="brains"></div>
+    <label class="field">Circuit <select id="trk"></select></label>
+    <div id="sliders"></div>
+    <details><summary>Réglages de la voiture</summary><div id="advSliders"></div><button id="bDef" class="ghost">Valeurs par défaut</button></details>
+    <details><summary>Voir le cerveau</summary><canvas id="nn" width="700" height="170" aria-label="Schéma du réseau de neurones"></canvas><p class="note" id="nnInfo"></p></details>
+    <div class="row"><button id="bResetBrain" class="ghost">Repartir de zéro</button><button id="bToRace" class="primary" disabled>Aller à la course</button></div>
+   </div>
+   <div id="pRace">
+    <h2>Course <span id="lbT"></span></h2>
+    <div class="scroll"><table id="lb"></table></div>
+    <section id="raceResults" hidden aria-live="polite">
+     <div class="winner"><span>Voiture gagnante</span><strong id="resultsReward"></strong></div>
+     <p id="resultsSummary"></p>
+     <div class="scroll" id="resultsTable"></div>
+    </section>
+    <div class="row"><button id="bBackTrain" class="ghost">Retour à l'entraînement</button><button id="bRaceNew" class="primary">Relancer la course</button></div>
+   </div>
+  </aside>
+ </div>
+</section>
+<div id="toast" role="status" hidden></div>
+</main>
+
+<dialog id="helpDialog"><form method="dialog">
+ <h2>Comment ça marche</h2>
+ <p><b>1. Entraînement.</b> Quatre cerveaux (Réflexe, Équilibré, Profond, Large) apprennent chacun à conduire. À chaque génération, des dizaines de voitures essaient ; les meilleures sont choisies comme parents (roulette) et légèrement modifiées (mutation).</p>
+ <p><b>2. Prêt.</b> Un cerveau est « Prêt » quand il a terminé un tour. Il garde ce qu'il a appris quand tu changes de circuit.</p>
+ <p><b>3. Course.</b> Les cerveaux entraînés s'affrontent sur 3 tours, sans apprendre. La voiture avec le meilleur score gagne.</p>
+ <button>Fermer</button>
+</form></dialog>
+
+<!-- Bibliothèque de dessin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<!-- Code du jeu : même découpage que le projet de référence (nn, ga, ray, boundary, vehicle, sketch) -->
+<script src="nn.js"></script>
+<script src="ga.js"></script>
+<script src="ray.js"></script>
+<script src="boundary.js"></script>
+<script src="vehicle.js"></script>
+<script src="tracks.js"></script>
+<script src="ui.js"></script>
+<script src="sketch.js"></script>
+</body>
+</html>
