@@ -51,3 +51,9 @@ dialog{max-width:520px;background:var(--panel);color:var(--ink);border:1px solid
 @media(max-width:900px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.steps{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:14px 10px 24px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.tools{margin:0 0 14px;gap:6px;justify-content:flex-start}.tools button{padding:6px 10px;font-size:.85rem}
+fieldset{border:1px solid var(--line);border-radius:10px;margin:8px 0;padding:8px 10px}legend{color:var(--mute);padding:0 6px}
+dialog input[type=text],dialog input[type=number]{flex:1;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit}
+dialog input[type=color]{width:48px;height:30px;border:1px solid var(--line);border-radius:8px;background:none;padding:2px}
+.warn{color:#ff8f7a;min-height:1.2em}

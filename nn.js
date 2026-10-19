@@ -7,6 +7,12 @@ const BRAIN_TYPES = [
   { id: 'wide',     name: 'Large',     hidden: [16],    color: '#5fd38d' }
 ];
 
+// Copie des cerveaux d'origine (pour pouvoir les restaurer) et limites de l'éditeur
+const DEFAULT_BRAINS = BRAIN_TYPES.map(b => ({ id: b.id, name: b.name, hidden: b.hidden.slice(), color: b.color }));
+const MAX_BRAINS = 8;    // nombre maximal de cerveaux dans l'écurie
+const MAX_LAYERS = 3;    // nombre maximal de couches cachées
+const MAX_NEURONS = 32;  // nombre maximal de neurones par couche
+
 // Amplitude (écart-type) d'une mutation sur un poids
 let MUTATION_SIZE = 0.4;
 

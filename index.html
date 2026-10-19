@@ -11,8 +11,8 @@
 <header><h1>Écurie IA</h1><div class="hbtns"><button id="bHelp" class="ghost">Aide</button><button id="bMenu" class="ghost">Menu</button></div></header>
 
 <section id="vMenu">
- <h2>Entraîne quatre cerveaux, puis fais-les courir.</h2>
- <p class="lead">Chaque cerveau apprend à conduire sur le circuit de ton choix, génération après génération. Dès que l'un d'eux sait faire un tour complet, la course s'ouvre.</p>
+ <h2>Entraîne tes cerveaux, puis fais-les courir.</h2>
+ <p class="lead">Quatre cerveaux t'attendent, et tu peux en créer ou en modifier d'autres. Chacun apprend à conduire sur le circuit de ton choix, génération après génération. Dès que l'un d'eux sait faire un tour complet, la course s'ouvre.</p>
  <div class="steps">
   <button id="bGoTrain" class="step"><b>1 · Entraînement</b><span>Choisis un cerveau, laisse-le apprendre, change de circuit quand il maîtrise le précédent.</span></button>
   <button id="bGoRace" class="step" disabled><b>2 · Course</b><span id="raceHint"></span></button>
@@ -37,6 +37,7 @@
    <div id="pTrain">
     <h2>Tes cerveaux</h2>
     <div id="brains" class="brains"></div>
+    <div class="row tools"><button id="bNewBrain" class="ghost">＋ Nouveau</button><button id="bEditBrain" class="ghost">Modifier</button><button id="bDelBrain" class="ghost">Supprimer</button><button id="bDefaultBrains" class="ghost">Cerveaux d'origine</button></div>
     <label class="field">Circuit <select id="trk"></select></label>
     <div id="sliders"></div>
     <details><summary>Réglages de la voiture</summary><div id="advSliders"></div><button id="bDef" class="ghost">Valeurs par défaut</button></details>
@@ -59,9 +60,25 @@
 <div id="toast" role="status" hidden></div>
 </main>
 
+<dialog id="brainDialog"><form method="dialog" id="brainForm" onsubmit="return false">
+ <h2 id="bdTitle">Nouveau cerveau</h2>
+ <label class="field">Nom <input id="bdName" type="text" maxlength="16" autocomplete="off"></label>
+ <label class="field">Couleur <input id="bdColor" type="color"></label>
+ <fieldset>
+  <legend>Couches de neurones cachées</legend>
+  <label class="field">Couche 1 <input id="bdL1" type="number" min="1" max="32" step="1"></label>
+  <label class="field">Couche 2 <input id="bdL2" type="number" min="0" max="32" step="1" placeholder="0 = aucune"></label>
+  <label class="field">Couche 3 <input id="bdL3" type="number" min="0" max="32" step="1" placeholder="0 = aucune"></label>
+ </fieldset>
+ <p class="note" id="bdInfo"></p>
+ <p class="note" id="bdHint"></p>
+ <p class="note warn" id="bdWarn" role="alert"></p>
+ <div class="row"><button type="button" id="bdCancel" class="ghost">Annuler</button><button type="button" id="bdSave" class="primary">Enregistrer</button></div>
+</form></dialog>
+
 <dialog id="helpDialog"><form method="dialog">
  <h2>Comment ça marche</h2>
- <p><b>1. Entraînement.</b> Quatre cerveaux (Réflexe, Équilibré, Profond, Large) apprennent chacun à conduire. À chaque génération, des dizaines de voitures essaient ; les meilleures sont choisies comme parents (roulette) et légèrement modifiées (mutation).</p>
+ <p><b>1. Entraînement.</b> Chaque cerveau (Réflexe, Équilibré, Profond, Large au départ) apprend à conduire. Avec « Nouveau » et « Modifier », tu crées tes propres cerveaux : nom, couleur et nombre de neurones (jusqu'à 3 couches, 8 cerveaux au total). À chaque génération, des dizaines de voitures essaient ; les meilleures sont choisies comme parents (roulette) et légèrement modifiées (mutation).</p>
  <p><b>2. Prêt.</b> Un cerveau est « Prêt » quand il a terminé un tour. Il garde ce qu'il a appris quand tu changes de circuit.</p>
  <p><b>3. Course.</b> Les cerveaux entraînés s'affrontent sur 3 tours, sans apprendre. La voiture avec le meilleur score gagne.</p>
  <button>Fermer</button>

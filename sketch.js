@@ -12,7 +12,7 @@ let PENALTY = 0.5;         // pénalité par sortie de piste (course)
 const W = 900, H = 600;    // taille du canvas
 const TRAIN_LAPS = 1;      // tours demandés à l'entraînement
 const RACE_LAPS = 3;       // tours de la course
-const RACE_CARS = 12;      // voitures dans la course
+let RACE_CARS = 12;        // voitures dans la course (au moins 2 par cerveau)
 const RACE_MAX = 3600;     // durée maximale de la course (images)
 const SIGHT_MAX = 250;
 
@@ -282,6 +282,7 @@ function raceScore(v) {
 
 function startRace() {
   mode = 'race';
+  RACE_CARS = Math.max(12, BRAIN_TYPES.length * 2);
   raceFrame = 0;
   raceRanking = [];
   buildTrack(currentTrack);

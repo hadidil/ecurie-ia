@@ -6,6 +6,8 @@
 
 Le code reprend la structure du projet de référence « 9 – VoitureSuitCircuit genetic algo » : `index.html`, `nn.js`, `ga.js`, `ray.js`, `boundary.js`, `vehicle.js`, `sketch.js`, avec les mêmes classes et fonctions (`NeuralNetwork`, `Vehicle`, `Ray`, `Boundary`, `nextGeneration`, `pickOne`, `calculateFitnessForAllCars`, `buildTrack`, `setup`, `draw`). Trois fichiers sont ajoutés : `tracks.js`, `ui.js` et `style.css`.
 
+Tu peux aussi créer, modifier et supprimer tes propres cerveaux depuis le panneau de l'entraînement.
+
 Pour lancer le jeu : ouvrir `index.html` (une connexion est nécessaire pour charger p5.js depuis le CDN).
 
 ---
@@ -58,18 +60,24 @@ Pour lancer le jeu : ouvrir `index.html` (une connexion est nécessaire pour cha
 **Validation :** les poids sont sauvegardés et rechargés ; changer de circuit ou de réglage physique conserve le cerveau ; changer le nombre de capteurs remet l'écurie à zéro.
 **Statut :** ✅ réalisée
 
-## Tâche 9 — La course
+## Tâche 9 — Créer et modifier les cerveaux
+**Fichiers :** `ui.js`, `index.html`, `style.css`, `nn.js` (limites et cerveaux d'origine)
+**À faire :** ajouter une fenêtre d'édition (nom, couleur, 1 à 3 couches cachées de 1 à 32 neurones) accessible par les boutons « Nouveau », « Modifier », « Supprimer » et « Cerveaux d'origine ». Limiter l'écurie à 8 cerveaux, en garder au moins un, vérifier la saisie (nom obligatoire et unique, tailles de couches valides) et échapper les noms avant de les afficher. Sauvegarder la liste dans le `localStorage` (clé `ecurieTypes`). Changer seulement le nom ou la couleur conserve ce que le cerveau a appris ; changer les couches le remet à zéro. La course prend en compte tous les cerveaux (au moins 2 voitures par cerveau, 12 voitures minimum).
+**Validation :** un cerveau créé s'entraîne, devient « Prêt », participe à la course, survit au rechargement de la page ; un nom en double ou une couche de plus de 32 neurones est refusé ; des données corrompues dans le `localStorage` sont ignorées.
+**Statut :** ✅ réalisée
+
+## Tâche 10 — La course
 **Fichiers :** `sketch.js` (`startRace`, `raceStep`, `endRace`, `raceScore`), `ui.js` (classement, résultats)
 **À faire :** lancer 12 voitures (les cerveaux entraînés puis des variantes légèrement mutées) sur 3 tours, remettre sur la route une voiture qui sort, terminer quand une voiture finit les 3 tours, classer par score (tours parcourus − pénalité de sorties + bonus d'arrivée), afficher le classement en direct puis la fiche de résultats.
 **Validation :** une course complète se termine avec un gagnant ; « Relancer la course » et « Retour à l'entraînement » fonctionnent.
 **Statut :** ✅ réalisée
 
-## Tâche 10 — Tests et vérification
+## Tâche 11 — Tests et vérification
 **À faire :** tester le moteur sans navigateur (géométrie des circuits, apprentissage sur tous les circuits et cerveaux, course complète), puis le parcours de l'interface avec le vrai p5.js (menu, entraînement, passage « Prêt », sauvegarde, réglages, course, résultats, retour), puis contrôler le rendu sur des images générées.
 **Validation :** aucune erreur ; rendu conforme à la version d'origine du jeu.
 **Statut :** ✅ réalisée. Reste à ouvrir le jeu une fois dans un vrai navigateur pour confirmer le rendu et les performances.
 
-## Tâche 11 — Publication sur GitHub
+## Tâche 12 — Publication sur GitHub
 **À faire :**
 1. Créer un dépôt public sur GitHub.
 2. Depuis le dossier du projet (celui qui contient `index.html`) : `git init`, `git add .`, `git commit -m "Écurie IA"`, `git branch -M main`, `git remote add origin <url du dépôt>`, `git push -u origin main`.

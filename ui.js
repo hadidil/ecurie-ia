@@ -8,6 +8,39 @@ let roster = {};           // un cerveau mémorisé par famille
 let trainingStarted = false;
 let toastT = 0;
 
+// Les noms de cerveaux sont saisis par l'utilisateur : on les échappe avant de les afficher
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ---------- Liste des cerveaux (créés et modifiés par le joueur) ----------
+const TYPES_KEY = 'ecurieTypes';
+const BRAIN_COLORS = ['#ffd23f', '#ff9ec7', '#7aa2ff', '#ff9f43', '#2ec4b6', '#b8f27c', '#f25f5c', '#a0e7e5'];
+
+function saveBrainTypes() {
+  try { localStorage.setItem(TYPES_KEY, JSON.stringify(BRAIN_TYPES)); } catch (e) {}
+}
+
+// Remplace le contenu de BRAIN_TYPES (le tableau reste le même objet)
+function setBrainTypes(list) {
+  BRAIN_TYPES.length = 0;
+  list.forEach(b => BRAIN_TYPES.push({ id: b.id, name: b.name, hidden: b.hidden.slice(), color: b.color }));
+  activeBrain = BRAIN_TYPES[0];
+}
+
+function validBrain(b) {
+  return b && typeof b.id === 'string' && typeof b.name === 'string' && b.name.trim() && b.name.length <= 16
+    && Array.isArray(b.hidden) && b.hidden.length >= 1 && b.hidden.length <= MAX_LAYERS
+    && b.hidden.every(n => Number.isInteger(n) && n >= 1 && n <= MAX_NEURONS)
+    && typeof b.color === 'string' && /^#[0-9a-f]{6}$/i.test(b.color);
+}
+
+function loadBrainTypes() {
+  let list = null;
+  try { list = JSON.parse(localStorage.getItem(TYPES_KEY)); } catch (e) {}
+  const ok = Array.isArray(list) && list.length >= 1 && list.length <= MAX_BRAINS
+    && list.every(validBrain) && new Set(list.map(b => b.id)).size === list.length;
+  setBrainTypes(ok ? list : DEFAULT_BRAINS);
+}
+
 // ---------- Écurie : un cerveau mémorisé par famille ----------
 function emptyEntry() {
   return { brain: null, ready: false, tr: {} };
@@ -57,7 +90,7 @@ function renderBrains() {
   $('brains').innerHTML = BRAIN_TYPES.map(b => {
     const e = roster[b.id];
     const p = (e.tr[currentTrack] || {}).pct || 0;
-    return `<button class="brain${b === activeBrain ? ' on' : ''}" data-id="${b.id}" style="--c:${b.color}"><span>${b.name}</span><small>${b.hidden.join(' + ')} neurones</small><i class="bar"><u style="width:${p}%"></u></i><em>${e.ready ? 'Prêt ✓' : p ? p + ' %' : 'Débutant'}</em></button>`;
+    return `<button class="brain${b === activeBrain ? ' on' : ''}" data-id="${b.id}" style="--c:${b.color}"><span>${esc(b.name)}</span><small>${b.hidden.join(' + ')} neurones</small><i class="bar"><u style="width:${p}%"></u></i><em>${e.ready ? 'Prêt ✓' : p ? p + ' %' : 'Débutant'}</em></button>`;
   }).join('');
   document.querySelectorAll('.brain').forEach(el => {
     el.onclick = () => {
@@ -67,6 +100,8 @@ function renderBrains() {
   });
   const n = BRAIN_TYPES.filter(b => roster[b.id].ready).length;
   $('bGoRace').disabled = $('bToRace').disabled = !n;
+  $('bNewBrain').disabled = BRAIN_TYPES.length >= MAX_BRAINS;
+  $('bDelBrain').disabled = BRAIN_TYPES.length <= 1;
   $('raceHint').textContent = n
     ? n + ' cerveau' + (n > 1 ? 'x' : '') + ' prêt' + (n > 1 ? 's' : '') + '. Les autres partiront avec ce qu\'ils ont appris.'
     : 'Termine un tour avec un cerveau pour débloquer la course.';
@@ -89,6 +124,120 @@ function toast(t) {
 }
 
 const say = t => $('note').textContent = t;
+
+// ---------- Éditeur de cerveaux : créer, modifier, supprimer ----------
+let editing = null; // cerveau en cours de modification (null = création)
+
+function nextColor() {
+  const used = BRAIN_TYPES.map(b => b.color.toLowerCase());
+  return BRAIN_COLORS.find(c => !used.includes(c)) || BRAIN_COLORS[0];
+}
+
+function layersFromForm() {
+  return ['bdL1', 'bdL2', 'bdL3'].map(id => parseInt($(id).value, 10)).filter(n => Number.isInteger(n) && n > 0);
+}
+
+// Message d'erreur du formulaire, ou chaîne vide si tout est bon
+function brainFormError() {
+  const name = $('bdName').value.trim();
+  if (!name) return 'Donne un nom au cerveau.';
+  if (BRAIN_TYPES.some(b => b !== editing && b.name.toLowerCase() === name.toLowerCase())) return 'Ce nom est déjà pris.';
+  const raw = [$('bdL1').value, $('bdL2').value, $('bdL3').value];
+  if (!(parseInt(raw[0], 10) >= 1)) return 'La couche 1 doit avoir au moins 1 neurone.';
+  if (raw.some(v => v !== '' && !(parseInt(v, 10) >= 0 && parseInt(v, 10) <= MAX_NEURONS))) return 'Chaque couche a entre 0 et ' + MAX_NEURONS + ' neurones.';
+  return '';
+}
+
+function refreshBrainForm() {
+  const err = brainFormError();
+  const hidden = layersFromForm();
+  $('bdWarn').textContent = err;
+  $('bdSave').disabled = Boolean(err);
+  if (hidden.length) {
+    const probe = new NeuralNetwork(RAYS + 1, hidden, 2);
+    $('bdInfo').textContent = [RAYS + 1, ...hidden, 2].join(' → ') + ' : ' + probe.geneCount + ' poids et biais';
+  } else {
+    $('bdInfo').textContent = '';
+  }
+}
+
+function openBrainEditor(brain) {
+  editing = brain || null;
+  $('bdTitle').textContent = brain ? 'Modifier « ' + brain.name + ' »' : 'Nouveau cerveau';
+  $('bdName').value = brain ? brain.name : '';
+  $('bdColor').value = brain ? brain.color : nextColor();
+  const h = brain ? brain.hidden : [8];
+  $('bdL1').value = h[0] || '';
+  $('bdL2').value = h[1] || '';
+  $('bdL3').value = h[2] || '';
+  $('bdHint').textContent = brain ? 'Changer les couches remet ce cerveau à zéro (ses poids ne correspondraient plus).' : 'Un nouveau cerveau commence sans rien savoir.';
+  refreshBrainForm();
+  const d = $('brainDialog');
+  if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+}
+
+function closeBrainEditor() {
+  const d = $('brainDialog');
+  if (d.close) d.close(); else d.removeAttribute('open');
+}
+
+function saveBrainEditor() {
+  if (brainFormError()) return refreshBrainForm();
+  const name = $('bdName').value.trim().slice(0, 16);
+  const color = $('bdColor').value;
+  const hidden = layersFromForm();
+
+  if (editing) {
+    const sameShape = hidden.join(',') === editing.hidden.join(',');
+    editing.name = name;
+    editing.color = color;
+    if (!sameShape) {
+      editing.hidden = hidden;
+      roster[editing.id] = emptyEntry();   // les anciens poids ne vont plus
+    }
+    saveBrainTypes();
+    saveRoster();
+    if (!sameShape && mode === 'train' && editing === activeBrain) startTraining(editing);
+    say(name + ' a été modifié' + (sameShape ? '.' : ' et repart de zéro.'));
+  } else {
+    if (BRAIN_TYPES.length >= MAX_BRAINS) return;
+    const brain = { id: 'b' + Date.now().toString(36), name: name, hidden: hidden, color: color };
+    BRAIN_TYPES.push(brain);
+    roster[brain.id] = emptyEntry();
+    saveBrainTypes();
+    saveRoster();
+    if (mode === 'train') startTraining(brain); else activeBrain = brain;
+    say(name + ' est créé : lance l\'entraînement et regarde-le apprendre.');
+  }
+  closeBrainEditor();
+  renderBrains();
+}
+
+function deleteActiveBrain() {
+  if (BRAIN_TYPES.length <= 1) return;
+  if (!confirm('Supprimer le cerveau « ' + activeBrain.name + ' » et tout ce qu\'il a appris ?')) return;
+  const gone = activeBrain;
+  BRAIN_TYPES.splice(BRAIN_TYPES.indexOf(gone), 1);
+  delete roster[gone.id];
+  saveBrainTypes();
+  saveRoster();
+  activeBrain = BRAIN_TYPES[0];
+  if (mode === 'train') startTraining(activeBrain);
+  renderBrains();
+  say(gone.name + ' a été supprimé.');
+}
+
+function restoreDefaultBrains() {
+  if (!confirm('Remettre les cerveaux d\'origine ? Les cerveaux créés et tout ce qu\'ils ont appris seront effacés.')) return;
+  setBrainTypes(DEFAULT_BRAINS);
+  roster = {};
+  BRAIN_TYPES.forEach(b => roster[b.id] = emptyEntry());
+  saveBrainTypes();
+  saveRoster();
+  if (mode === 'train') startTraining(activeBrain);
+  renderBrains();
+  say('Les cerveaux d\'origine sont de retour.');
+}
 
 // ---------- Schéma du cerveau ----------
 function drawNet() {
@@ -156,7 +305,7 @@ function updateHUD() {
 function leaderboardRows(list) {
   return list.map((v, i) => {
     const lap = v.bestLap ? (v.bestLap / 60).toFixed(2) + ' s' : '–';
-    return `<tr${i ? '' : ' class="top"'}><td>${i + 1}</td><td>n°${v.number}</td><td><i class="sw" style="background:${v.type.color}"></i>${v.type.name}</td><td>${Math.min(v.laps + (v.finished ? 0 : 1), RACE_LAPS)}/${RACE_LAPS}</td><td>${lap}</td><td>${v.crashes}</td><td>${raceScore(v).toFixed(2)}</td></tr>`;
+    return `<tr${i ? '' : ' class="top"'}><td>${i + 1}</td><td>n°${v.number}</td><td><i class="sw" style="background:${v.type.color}"></i>${esc(v.type.name)}</td><td>${Math.min(v.laps + (v.finished ? 0 : 1), RACE_LAPS)}/${RACE_LAPS}</td><td>${lap}</td><td>${v.crashes}</td><td>${raceScore(v).toFixed(2)}</td></tr>`;
   }).join('');
 }
 
@@ -271,7 +420,7 @@ function buildSliders() {
       if (fx === 2) {
         applyParam(k, +e.target.value);
         resetEcurie();
-        say('Les capteurs ont changé : les quatre cerveaux repartent de zéro.');
+        say('Les capteurs ont changé : tous les cerveaux repartent de zéro.');
       } else if (fx === 1) {
         paramChanged();
       }
@@ -291,6 +440,7 @@ function resetSliders() {
 
 // ---------- Démarrage de l'interface (appelée par setup() dans sketch.js) ----------
 function initUI() {
+  loadBrainTypes();
   loadRoster();
   buildSliders();
 
@@ -322,6 +472,14 @@ function initUI() {
     renderBrains();
     say(activeBrain.name + ' repart de zéro.');
   };
+
+  $('bNewBrain').onclick = () => openBrainEditor(null);
+  $('bEditBrain').onclick = () => openBrainEditor(activeBrain);
+  $('bDelBrain').onclick = deleteActiveBrain;
+  $('bDefaultBrains').onclick = restoreDefaultBrains;
+  $('bdSave').onclick = saveBrainEditor;
+  $('bdCancel').onclick = closeBrainEditor;
+  ['bdName', 'bdL1', 'bdL2', 'bdL3'].forEach(id => $(id).oninput = refreshBrainForm);
 
   renderBrains();
   showView('menu');
